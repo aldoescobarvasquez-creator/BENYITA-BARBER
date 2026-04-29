@@ -19,7 +19,7 @@ Entra a la página y:
 4. Agenda tu reserva
 
 ## 🌐 Página web
-(Aquí pegas tu link de GitHub Pages)
+
 
 ## 💈 Autor
 Proyecto creado para Benyita Barber
