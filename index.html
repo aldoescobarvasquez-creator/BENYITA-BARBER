@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Benyita Barber</title>
+
+<!-- ICONOS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+
+<style>
+body {
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(180deg,#0d0d0d,#1a1a1a);
+  color:white;
+}
+
+header {
+  text-align:center;
+  padding:30px 20px;
+}
+
+h1 {
+  color: gold;
+  font-size:28px;
+}
+
+.container {
+  max-width:400px;
+  margin:auto;
+  padding:20px;
+}
+
+.card {
+  background:#111;
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 0 15px rgba(255,215,0,0.1);
+  margin-bottom:20px;
+}
+
+input, select {
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border-radius:10px;
+  border:none;
+  background:#222;
+  color:white;
+}
+
+button {
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:gold;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover {
+  background:#ffcc00;
+  transform:scale(1.05);
+}
+
+.reserva {
+  background:#1c1c1c;
+  padding:10px;
+  border-radius:10px;
+  margin-top:10px;
+  border-left:4px solid gold;
+}
+
+.icon {
+  margin-right:8px;
+  color:gold;
+}
+
+footer {
+  text-align:center;
+  padding:15px;
+  font-size:12px;
+  opacity:0.6;
+}
+</style>
+
+</head>
+<body>
+
+<header>
+  <h1><i class="fa-solid fa-scissors icon"></i>Benyita Barber</h1>
+  <p>Reserva tu hora 💈</p>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <input type="text" id="nombre" placeholder="👤 Tu nombre">
+    <input type="date" id="fecha">
+    
+    <select id="hora"></select>
+
+    <button onclick="agendar()">💈 Agendar Hora</button>
+  </div>
+
+  <div class="card">
+    <h3>📅 Reservas</h3>
+    <div id="reservas"></div>
+  </div>
+
+</div>
+
+<footer>
+  © 2026 Benyita Barber
+</footer>
+
+<script>
+// 🔥 TU CONFIG FIREBASE AQUÍ
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_DOMINIO",
+  projectId: "TU_ID",
+};
+
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const horaSelect = document.getElementById("hora");
+const fechaInput = document.getElementById("fecha");
+
+fechaInput.addEventListener("change", generarHoras);
+
+async function generarHoras(){
+  horaSelect.innerHTML="";
+
+  const fecha = fechaInput.value;
+  const dia = new Date(fecha).getDay();
+
+  let inicio = (dia===0||dia===6)?11:16;
+  let fin = 19;
+
+  const snapshot = await db.collection("reservas").get();
+  let reservas = snapshot.docs.map(d=>d.data());
+
+  for(let i=inicio;i<=fin;i++){
+    let hora = (i<10?"0":"")+i+":00";
+
+    let ocupado = reservas.some(r=>r.fecha===fecha && r.hora===hora);
+
+    let option = document.createElement("option");
+    option.value=hora;
+    option.textContent = ocupado ? hora+" (Ocupada)" : hora;
+    if(ocupado) option.disabled=true;
+
+    horaSelect.appendChild(option);
+  }
+}
+
+async function agendar(){
+  const nombre = document.getElementById("nombre").value;
+  const fecha = fechaInput.value;
+  const hora = horaSelect.value;
+
+  if(!nombre||!fecha||!hora){
+    alert("Completa todo");
+    return;
+  }
+
+  await db.collection("reservas").add({nombre,fecha,hora});
+
+  alert("Reserva lista 💈");
+
+  mostrar();
+  generarHoras();
+}
+
+async function mostrar(){
+  const cont = document.getElementById("reservas");
+  cont.innerHTML="";
+
+  const snapshot = await db.collection("reservas").get();
+
+  snapshot.forEach(doc=>{
+    let r = doc.data();
+    cont.innerHTML += `
+      <div class="reserva">
+        <strong>${r.nombre}</strong><br>
+        ${r.fecha} - ${r.hora}
+      </div>
+    `;
+  });
+}
+
+mostrar();
+</script>
+
+</body>
+</html>
